@@ -3,12 +3,12 @@
 #include <RF24.h>
 RF24 radio(8, 10); // CE, CSN
 
-#define iters 2
+#define iters 5
 
-const int trigPinL = A5;
-const int echoPinL = A4;
-const int trigPinR = A1;
-const int echoPinR = A0;
+const int trigPinL = A0;
+const int echoPinL = A1;
+const int trigPinR = A2;
+const int echoPinR = A3;
 const int m1A = 4;
 const int m1B = 5;
 const int m1Spd = 6;
@@ -19,8 +19,10 @@ int waited;
 long temp;
 long durationL, durationR;
 long distanceL, distanceR;
-bool buttonState = 1;
-const byte address[6] = "00001";
+int buttonState = 1;
+int x, y;
+char c;
+const uint64_t pipe = 0xE6E6E6E6E6E6;
 bool written = false;
 void setup() {
   pinMode(trigPinL, OUTPUT);
@@ -35,16 +37,16 @@ void setup() {
   pinMode(m2Spd, OUTPUT);
   Serial.begin(9600);
   radio.begin();
-  radio.openWritingPipe(address);
+  radio.openReadingPipe(1,pipe);
   radio.setPALevel(RF24_PA_MAX);
-  radio.stopListening();
+  radio.startListening();
 }
 
 long msToIn(long ms) {
   return ms / 74/* / 2*/;
 }
 
-void write1(double mSpeed) { // right
+void write1(double mSpeed) {
   Serial.print("L: ");
   Serial.println(mSpeed * 255);
   if (mSpeed > 1) {
@@ -69,7 +71,7 @@ void write1(double mSpeed) { // right
   }
 }
 
-void write2(double mSpeed) { // left
+void write2(double mSpeed) {
   Serial.print("R: ");
   Serial.println(mSpeed * 255);
   if (mSpeed > 1) {
@@ -95,82 +97,37 @@ void write2(double mSpeed) { // left
 }
 
 void loop() {
-  durationL = 0;
-  waited = 0;
-  for (int i = 0; i < iters; i++) {
-    radio.write(&buttonState, sizeof(buttonState));
-    digitalWrite(trigPinL, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPinL, LOW);
-    temp = pulseIn(echoPinL, HIGH);
-    if (temp > 30000 && waited < iters * 5) {
-      i--;
-      waited++;
+  if (radio.available()) {
+    radio.read(&c, sizeof(c));
+    delay(10);
+    while (c != 'x') {
+      radio.read(&c, sizeof(c));
+      delay(10);
     }
-    else if (temp > 30000) {
-      durationL = iters * 40000;
-      break;
+    delay(10);
+    radio.read(&x, sizeof(x));
+    delay(10);
+    while (c != 'y') {
+      radio.read(&c, sizeof(c));
+      delay(10);
     }
-    else {
-      durationL += temp;
-    }
-    delay(57);
-  }
-  durationL /= iters;
-  distanceL = msToIn(durationL);
-  Serial.print(durationL);
-  Serial.print(" L ");
-  Serial.println(distanceL);
-
-  durationR = 0;
-  waited = 0;
-  for (int i = 0; i < iters; i++) {
-    radio.write(&buttonState, sizeof(buttonState));
-    digitalWrite(trigPinR, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPinR, LOW);
-    temp = pulseIn(echoPinR, HIGH);
-    if (temp > 30000 && waited < iters * 5) {
-      i--;
-      waited++;
-    }
-    else if (temp > 30000) {
-      durationR = iters * 40000;
-      break;
+    delay(10);
+    radio.read(&y, sizeof(y));
+    Serial.println(x);
+    Serial.println(y);
+    //Serial.println(buttonState);
+    if (x > 512) {
+      //write1(map(y, 0, 1023, -1, 1) - map(x, 0, 512, 1, 0));
+      write1((double) y / 1023 * 2 - 1 - (1 - (double) x / 512));
+      //write2(map(y, 0, 1023, -1, 1));
+      write2((double) y / 1023 * 2 - 1);
     }
     else {
-      durationR += temp;
+      //write1(map(y, 0, 1023, -1, 1));
+      write1((double) y / 1023 * 2 - 1);
+      //write2(map(y, 0, 1023, -1, 1) - map(x, 512, 1023, 0, 1));
+      write2((double) y / 1023 * 2 - 1 - (((double) x - 512) / 512));
     }
-    delay(57);
   }
-  durationR /= iters;
-  distanceR = msToIn(durationR);
-  Serial.print(durationR);
-  Serial.print(" R ");
-  Serial.println(distanceR);
-
-  if (durationL > 30000 && durationR > 30000) {
-    write1(0);
-    write2(0);
-    Serial.println("Out of range!");
-  }
-  else if (durationL > 30000) {
-    write1(1);
-    write2(-1);
-    Serial.println("LS is lost!");
-  }
-  else if (durationR > 30000) {
-    write1(-1);
-    write2(1);
-    Serial.println("RS is lost!");
-  }
-  else {
-    //write1((double) (distanceL - 50) / 50.0 + (double) (distanceL - distanceR) / 40.0);
-    //write2((double) (distanceR - 50) / 50.0 + (double) (distanceR - distanceL) / 40.0);
-    write1(distanceR * 2 - distanceL);
-    write2(distanceL * 2 - distanceR);
-    Serial.println("Good!");
-  }
-  delay(100);
-  Serial.println("\n");
+  delay(10);
 }
