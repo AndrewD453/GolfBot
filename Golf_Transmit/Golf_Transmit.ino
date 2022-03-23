@@ -26,7 +26,7 @@ const uint64_t pipe = 0xE6E6E6E6E6E6;
 const byte address[6] = "00001";
 
 long startT;
-int mode = 0;
+int mode = 1;
 float x, y;
 char modeC;
 bool wasPressed = false;
@@ -35,6 +35,8 @@ bool ping;
 void setup() {
   Serial.begin(9600);
   pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
   radio.begin(); // Start the NRF24L01
   radio.openWritingPipe(pipe);
   radio.stopListening();
