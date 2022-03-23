@@ -44,6 +44,7 @@ void navManual() {
 }
 
 void navGPS() {
+  readGPS();
   target = NeoGPS::Location_t((long)x * 10000000L, (long)y * 10000000L); //Check this line
   distance = (float) fix.location.DistanceMiles(target) / 5280.0f;
   readIMU();
@@ -51,6 +52,10 @@ void navGPS() {
   Serial.println(ypr.yaw);
   myAngle = ypr.yaw;
   angle = myAngle - fix.location.BearingToDegrees(target); //!! Check clockwise vs counter
+  angle = (int)(myAngle - fix.location.BearingToDegrees(target) + 720) % 360;
+  if (angle > 180) {
+    angle -= 360;
+  }
   Serial.print("Offset angle: ");
   Serial.print(angle);
   Serial.print("   Distance: ");
@@ -60,13 +65,13 @@ void navGPS() {
     writeL(0); //! Calibrate turn speed
     writeR(0);
   }
-  else if (distance < 10) { //Within 10 ft, just rotate
-    writeL(angle * 0.05); //! Calibrate turn speed
-    writeR(-angle * 0.05);
+  else if (distance < 5) { //Within 5 ft, just rotate
+    writeL(angle / 90.0); //! Calibrate turn speed
+    writeR(-angle / 90.0);
   }
-  else if (distance < 50) { //Within 50 ft, move to it
-    writeL(angle * 0.03 + .5); //! Calibrate
-    writeR(-angle * 0.03 + .5);
+  else if (distance < 50) { //Within 50 ft, move to target
+    writeL(angle / 45.0 + .5); //! Calibrate
+    writeR(-angle / 45.0 + .5);
   }
   else { //Out of 50 ft, consider itself lost
     Serial.println("Out of range");
@@ -116,13 +121,7 @@ void loop() {
       writeR(0);
     }
   }
-  while (gps.available(gpsPort)) { //UPDATE GPS !!!
-    fix = gps.read();
-  }
-  if (bno08x.wasReset()) {
-    Serial.print("IMU was reset ");
-    setReports(reportType, reportIntervalUs);
-  }
+  readGPS();
   readIMU();
-  delay(10);
+  delay(20);
 }

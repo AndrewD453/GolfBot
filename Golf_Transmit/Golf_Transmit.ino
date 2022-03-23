@@ -8,14 +8,10 @@ RF24 radio(8, 10); // CE, CSN
 #include <NeoSWSerial.h>
 #include <GPSport.h>
 
-#define USPULSES 10
-
 NMEAGPS gps;
 
 gps_fix fix;
 
-const int trigPin = 4;
-const int echoPin = 5;
 const int RPin = A5;
 const int GPin = A6;
 const int BPin = A7;

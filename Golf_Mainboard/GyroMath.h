@@ -53,6 +53,10 @@ void quaternionToEulerGI(sh2_GyroIntegratedRV_t* rotational_vector, euler_t* ypr
 }
 
 void readIMU() {
+  if (bno08x.wasReset()) {
+    Serial.print("IMU was reset ");
+    setReports(reportType, reportIntervalUs);
+  }
   if (bno08x.getSensorEvent(&sensorValue)) {
     switch (sensorValue.sensorId) {
       case SH2_ARVR_STABILIZED_RV:
