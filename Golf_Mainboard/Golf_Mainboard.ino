@@ -157,96 +157,6 @@ void navManual() {
   writeR((v + w) / 200.0); //RIGHT
 }
 
-bool navUS() {
-  durationL = 0;
-  waitedL = 0;
-  LIters = 0;
-  durationR = 0;
-  waitedR = 0;
-  RIters = 0;
-
-  radio.read(&startT, sizeof(startT)); //Get start time from transmitter
-  Serial.println(startT);
-  int counter = 0;
-  for (int i = 2; i < USPULSES + 2/* && fix.dateTime.seconds <= startT + USPULSES*/; i++) {
-    while (counter <= i) { //Delay until time for next pulse
-      if (gps.available(gpsPort)) {
-        fix = gps.read();
-        counter++;
-      }
-    }
-    /*for (int i = 0; i < USPULSES && fix.dateTime.seconds <= startT + USPULSES; i++) {
-    while (fix.dateTime.seconds != (startT + i) % 60) { //Delay until time for next pulse
-      if (gps.available(gpsPort)) {
-        gps_fix fix = gps.read();
-      }
-    }*/
-    Serial.println("Pew!");
-    if (i % 2 == 0) { //On even iters, run L sensor
-      LIters++;
-      digitalWrite(trigPinR, HIGH);
-      delayMicroseconds(10);
-      digitalWrite(trigPinR, LOW);
-      temp = pulseIn(echoPinR, HIGH); //Read length of pulse (in microsecs)
-      Serial.println(temp);
-      if (temp > 30000) { //Over 30 ft away, out of range
-        waitedL++;
-      }
-      else {
-        durationL += temp;
-      }
-    }
-    else { //On odd iters, run R sensor
-      RIters++;
-      digitalWrite(trigPinL, HIGH);
-      delayMicroseconds(10);
-      digitalWrite(trigPinL, LOW);
-      temp = pulseIn(echoPinL, HIGH);
-      Serial.println(temp);
-      if (temp > 30000) { //Over 30 ft away, out of range
-        waitedR++;
-      }
-      else {
-        durationR += temp;
-      }
-    }
-  }
-
-  if (waitedL == LIters && waitedR == RIters) {
-    Serial.println("Out of range!");
-    return false;
-  }
-  else if (waitedL == LIters) {
-    writeL(1);
-    writeR(-1);
-    Serial.println("LS is lost!");
-  }
-  else if (waitedR == RIters) {
-    writeL(-1);
-    writeR(1);
-    Serial.println("RS is lost!");
-  }
-  else {
-    durationL /= LIters;
-    distanceL = usToIn(durationL);
-    Serial.print(durationL);
-    Serial.print(" L ");
-    Serial.println(distanceL);
-    durationR /= RIters;
-    distanceR = usToIn(durationR);
-    Serial.print(durationR);
-    Serial.print(" R ");
-    Serial.println(distanceR);
-    writeL((double) (distanceL - 50) / 50.0 + (double) (distanceL - distanceR) / 40.0);
-    writeR((double) (distanceR - 50) / 50.0 + (double) (distanceR - distanceL) / 40.0);
-    //writeL(distanceL * 2 - distanceR);
-    //writeR(distanceR * 2 - distanceL);
-    Serial.println("Good!");
-  }
-  delay(100);
-  return true;
-}
-
 NeoGPS::Location_t target ((long)x * 10000000L, (long)y * 10000000L);
 
 void navGPS() { 
@@ -320,10 +230,6 @@ void loop() {
       navManual();
     }
     else if (mode == 'F') {
-      /*if (!navUS()) { //Try Ultrasonic
-        Serial.println("US Failed, Using GPS");
-        navGPS(); //If no US reception, use GPS
-      }*/
       navGPS();
     }
     else {

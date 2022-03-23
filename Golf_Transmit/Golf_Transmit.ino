@@ -44,7 +44,7 @@ void setup() {
   while (!gps.available(gpsPort));
   Serial.println("GPS Worked");
   gps_fix fix = gps.read();
-  //attachInterrupt(digitalPinToInterrupt(buttonPin), nextMode, FALLING);
+  attachInterrupt(digitalPinToInterrupt(buttonPin), nextMode, FALLING);
   //delay(5000);
   while (!gps.available(gpsPort));
   fix = gps.read();
@@ -80,18 +80,6 @@ void nextMode() {
 }
 
 void loop() {
-  //Update mode if needed
-  /*if (digitalRead(buttonPin) == LOW && !wasPressed) {
-    mode = (mode + 1) % 3;
-    displayMode();
-    wasPressed = true;
-    Serial.println(mode);
-    }
-    if (digitalRead(buttonPin) == HIGH) {
-    wasPressed = false;
-    }*/
-  Serial.println(mode);
-
   // Set values to send
   if (mode == 0) { //Stopped
     x = 0;
@@ -117,36 +105,7 @@ void loop() {
   writeChar(',');
   radio.write(&y, sizeof(y));
   writeChar(')');
-
-  //Send US Pulse if in follow mode
-  /*if (mode == 1) {
-    int counter = 0;
-    startT = (fix.dateTime.seconds + 2) % 60; //Set to trigger in 2 seconds
-    Serial.println(startT);
-    radio.write(&startT, sizeof(startT));
-    for (int i = 2; i < USPULSES + 2; i++) { //Send USPULSES (10) pulses at 1-second intervals
-      /*while (counter <= i) { //Delay until time for next pulse
-        if (gps.available(gpsPort)) {
-          gps_fix fix = gps.read();
-          counter++;
-        }
-      }*/
-      /*while (fix.dateTime.seconds != (startT + i) % 60) { //Delay until time for next pulse
-        if (gps.available(gpsPort)) {
-          fix = gps.read();
-          Serial.println("Read!");
-          Serial.println(fix.dateTime.seconds);
-        }
-      }
-      delayMicroseconds(500); //Offset
-      digitalWrite(trigPin, HIGH);
-      delayMicroseconds(10);
-      digitalWrite(trigPin, LOW);
-      Serial.println("Pew!");
-    }
-    delay(1000);
-  }*/
-
+  
   while (gps.available(gpsPort)) { //UPDATE GPS (and figure out port) !!!
     fix = gps.read();
   }
