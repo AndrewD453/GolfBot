@@ -12,8 +12,8 @@ const uint64_t pipe = 0xE6E6E6E6E6E6;
 const byte address[6] = "00001";
 
 char c, mode;
-float x, y;
-float v, w;
+double x, y;
+double v, w;
 bool ping = true;
 
 void setup() {
