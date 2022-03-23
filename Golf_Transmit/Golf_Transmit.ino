@@ -23,7 +23,7 @@ const byte address[6] = "00001";
 
 long startT;
 volatile int mode = 1;
-long x, y;
+double x, y;
 char modeC;
 bool ping;
 
@@ -90,7 +90,11 @@ void loop() {
     y = 1023.0f - (float) analogRead(yPin);
     modeC = 'J';
   }
-  Serial.println(modeC);
+  Serial.print(modeC);
+  Serial.print(" ");
+  Serial.print(x);
+  Serial.print(" ");
+  Serial.println(y);
 
   //Send values
   writeChar(modeC);
@@ -102,6 +106,8 @@ void loop() {
   
   while (gps.available(gpsPort)) { //UPDATE GPS (and figure out port) !!!
     fix = gps.read();
+    //Serial.println("GPS!");
+    //Serial.println(fix.latitude());
   }
 
   delay(100);
