@@ -4,7 +4,6 @@
 
 RF24 radio(8, 10); // CE, CSN
 
-
 #include <NMEAGPS.h>
 #include <NeoSWSerial.h>
 #include <GPSport.h>
@@ -14,7 +13,6 @@ RF24 radio(8, 10); // CE, CSN
 NMEAGPS gps;
 
 gps_fix fix;
-
 
 const int trigPin = 4;
 const int echoPin = 5;
