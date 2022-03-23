@@ -23,7 +23,7 @@ const byte address[6] = "00001";
 
 long startT;
 volatile int mode = 1;
-float x, y;
+long x, y;
 char modeC;
 bool ping;
 
