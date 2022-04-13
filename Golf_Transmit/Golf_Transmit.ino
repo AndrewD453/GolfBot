@@ -23,13 +23,16 @@ const byte address[6] = "00001";
 
 long startT;
 volatile int mode = 1;
-double x, y;
+long x, y;
 char modeC;
 bool ping;
 
 void setup() {
   Serial.begin(9600);
   pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(RPin, OUTPUT);
+  pinMode(GPin, OUTPUT);
+  pinMode(BPin, OUTPUT);
   radio.begin(); // Start the NRF24L01
   radio.openWritingPipe(pipe);
   radio.stopListening();
@@ -81,13 +84,13 @@ void loop() {
     modeC = 'S';
   }
   else if (mode == 1) { //Follow
-    x = fix.latitude();
-    y = fix.longitude();
+    x = fix.latitudeL();
+    y = fix.longitudeL();
     modeC = 'F';
   }
   else if (mode == 2) { //Joystick
-    x = (float) analogRead(xPin);
-    y = 1023.0f - (float) analogRead(yPin);
+    x = (long) analogRead(xPin);
+    y = (long) (1023.0f - (float) analogRead(yPin));
     modeC = 'J';
   }
   Serial.print(modeC);
@@ -106,8 +109,8 @@ void loop() {
   
   while (gps.available(gpsPort)) { //UPDATE GPS (and figure out port) !!!
     fix = gps.read();
-    //Serial.println("GPS!");
-    //Serial.println(fix.latitude());
+    Serial.println("GPS!");
+    Serial.println(fix.latitude());
   }
 
   delay(100);

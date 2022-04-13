@@ -12,7 +12,7 @@ const uint64_t pipe = 0xE6E6E6E6E6E6;
 const byte address[6] = "00001";
 
 char c, mode;
-double x, y;
+long x, y;
 double v, w;
 bool ping = true;
 
@@ -45,8 +45,8 @@ void navManual() {
 
 void navGPS() {
   readGPS();
-  target = NeoGPS::Location_t((long)x * 10000000L, (long)y * 10000000L); //Check this line
-  distance = (float) fix.location.DistanceMiles(target) / 5280.0f;
+  target = NeoGPS::Location_t((long)x, (long)y);
+  distance = (float) fix.location.DistanceMiles(target) * 5280.0f;
   readIMU();
   Serial.print("My angle: ");
   Serial.println(ypr.yaw);
@@ -60,7 +60,16 @@ void navGPS() {
   Serial.print(angle);
   Serial.print("   Distance: ");
   Serial.println(distance);
+  Serial.print("Current seconds: ");
   Serial.println(fix.dateTime.seconds);
+  Serial.print("Current position: ");
+  Serial.print(fix.latitudeL());
+  Serial.print(", ");
+  Serial.println(fix.longitudeL());
+  Serial.print("Target position: ");
+  Serial.print(target.lat());
+  Serial.print(", ");
+  Serial.println(target.lon());
   if (distance < 2) { //Within 10 ft, just rotate
     writeL(0); //! Calibrate turn speed
     writeR(0);
